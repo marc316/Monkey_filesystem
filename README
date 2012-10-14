@@ -1,0 +1,64 @@
+Monkey Filesystem
+=================
+
+This project is an EXPERIMENT which aims to add a cache layer between web
+servers and a target file system when serving static content.
+
+The basic idea of this virtual (caching) filesystem , is to mount a virtual
+filesystem based in FUSE which re-map an existent directory content, so the
+web server configures its virtual host document root to this new mount point.
+
+
+The workflow is as follows:
+---------------------------
+
+- Web server perform different FS operations: open(2), read(2), stat(2), etc.
+
+- The file system checks if contains some cached data for the requested
+  operation, if it have, it returns the cache content, otherwise it ask the
+  native file system for that data, populate the cache and sends the results
+  back.
+
+       +------------+                 +-------------------+        +-------+
+       | Web Server |           +-----| Monkey Filesystem | <----> | Cache |
+       +---+--------+           |     +--------+----------+        +-------+
+           |          +--------+               |
+           |          |                        |
+           *-------+  |                        |              User Space
+                   |  |                        |       <=======================
+               +---+--+------------+           |             Kernel Space
+               |  FUSE  | ext4/nfs | <---------+
+               +-------------------+
+               |        VFS        |
+               +-------------------+
+               |    Linux Kernel   |
+               +-------------------+
+
+Why ?
+-----
+
+Implementing a generic and agnostic file system cache for web servers empower
+the system administrator to accomodate the cache behavior to it business needs
+and HW capacity.
+
+Some problems solved are:
+
+ - All web servers implements different cache mechanisms and expose a poor setup
+   over it cache behavior.
+
+ - Not all web servers provides information about it cached information.
+
+ - Cannot modify the cache memory size on-fly.
+
+
+License
+-------
+This project is Lincesed under the GPLv2.
+
+
+Author
+------
+Eduardo Silva P. <edsiper@gmail.com>
+ http://edsiper.linuxchile.cl
+ http://monkey-project.com
+ http://duda.io
